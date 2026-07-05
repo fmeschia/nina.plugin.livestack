@@ -276,6 +276,8 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
                                                                    exposureTime: e.Image.RawImageData.MetaData.Image.ExposureTime,
                                                                    gain: e.Image.RawImageData.MetaData.Camera.Gain,
                                                                    offset: e.Image.RawImageData.MetaData.Camera.Offset,
+                                                                   binX: e.Image.RawImageData.MetaData.Camera.BinX,
+                                                                   binY: e.Image.RawImageData.MetaData.Camera.BinY,
                                                                    width: e.Image.RawImageData.Properties.Width,
                                                                    height: e.Image.RawImageData.Properties.Height,
                                                                    bitDepth: (int)profileService.ActiveProfile.CameraSettings.BitDepth,
@@ -582,7 +584,7 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
             RegisterCalibrationMasters(calibrationManager);
             float[] theImageArray;
             using (CFitsioFITSReader reader = new CFitsioFITSReader(item.Path)) {
-                theImageArray = calibrationManager.ApplyLightFrameCalibrationInPlace(reader, item.Width, item.Height, item.ExposureTime, item.Gain, item.Offset, item.Filter, item.IsBayered);
+                theImageArray = calibrationManager.ApplyLightFrameCalibrationInPlace(reader, item.Width, item.Height, item.ExposureTime, item.Gain, item.Offset, item.BinX, item.BinY, item.Filter, item.IsBayered);
             }
             return theImageArray;
         }

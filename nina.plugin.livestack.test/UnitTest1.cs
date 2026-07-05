@@ -25,6 +25,8 @@ namespace nina.plugin.livestack.test {
         private double frameExposureTime;
         private int frameGain;
         private int frameOffset;
+        private int frameBinX;
+        private int frameBinY;
         private string frameFilter;
         private bool frameIsBayered;
 
@@ -55,6 +57,8 @@ namespace nina.plugin.livestack.test {
 
                 frameGain = metaData.Camera.Gain;
                 frameOffset = metaData.Camera.Offset;
+                frameBinX = metaData.Camera.BinX;
+                frameBinY = metaData.Camera.BinY;
                 frameFilter = metaData.FilterWheel.Filter;
                 frameExposureTime = double.IsNaN(metaData.Image.ExposureTime) ? 0 : metaData.Image.ExposureTime;
                 frameWidth = fits.Width;
@@ -71,6 +75,8 @@ namespace nina.plugin.livestack.test {
                 var imageType = metaData.Image.ImageType;
                 var gain = metaData.Camera.Gain;
                 var offset = metaData.Camera.Offset;
+                var binX = metaData.Camera.BinX;
+                var binY = metaData.Camera.BinY;
                 var filter = metaData.FilterWheel.Filter;
                 var exposureTime = double.IsNaN(metaData.Image.ExposureTime) ? 0 : metaData.Image.ExposureTime;
                 var width = fits.Width;
@@ -78,8 +84,8 @@ namespace nina.plugin.livestack.test {
 
                 var mean = (float)fits.ReadAllPixelsAsFloat().Mean();
 
-                manager.RegisterFlatMaster(new CalibrationFrameMeta(CalibrationFrameType.FLAT, FlatPath, gain, offset, exposureTime, filter, width, height, mean));
-                manager2.RegisterFlatMaster(new CalibrationFrameMeta(CalibrationFrameType.FLAT, FlatPath, gain, offset, exposureTime, filter, width, height, mean));
+                manager.RegisterFlatMaster(new CalibrationFrameMeta(CalibrationFrameType.FLAT, FlatPath, gain, offset, binX, binY, exposureTime, filter, width, height, mean));
+                manager2.RegisterFlatMaster(new CalibrationFrameMeta(CalibrationFrameType.FLAT, FlatPath, gain, offset, binX, binY, exposureTime, filter, width, height, mean));
             }
 
             // Register BIAS Master
@@ -90,6 +96,8 @@ namespace nina.plugin.livestack.test {
                     var imageType = metaData.Image.ImageType;
                     var gain = metaData.Camera.Gain;
                     var offset = metaData.Camera.Offset;
+                    var binX = metaData.Camera.BinX;
+                    var binY = metaData.Camera.BinY;
                     var filter = metaData.FilterWheel.Filter;
                     var exposureTime = double.IsNaN(metaData.Image.ExposureTime) ? 0 : metaData.Image.ExposureTime;
                     var width = fits.Width;
@@ -97,8 +105,8 @@ namespace nina.plugin.livestack.test {
 
                     var mean = (float)fits.ReadAllPixelsAsFloat().Mean();
 
-                    manager.RegisterBiasMaster(new CalibrationFrameMeta(CalibrationFrameType.BIAS, BiasPath, gain, offset, exposureTime, filter, width, height, mean));
-                    manager2.RegisterBiasMaster(new CalibrationFrameMeta(CalibrationFrameType.BIAS, BiasPath, gain, offset, exposureTime, filter, width, height, mean));
+                    manager.RegisterBiasMaster(new CalibrationFrameMeta(CalibrationFrameType.BIAS, BiasPath, gain, offset, binX, binY, exposureTime, filter, width, height, mean));
+                    manager2.RegisterBiasMaster(new CalibrationFrameMeta(CalibrationFrameType.BIAS, BiasPath, gain, offset, binX, binY, exposureTime, filter, width, height, mean));
                 }
                 plugin.UseBiasForLights = true;
             }
@@ -113,9 +121,9 @@ namespace nina.plugin.livestack.test {
 
         [Test]
         public void Test1() {
-            var baseline = manager.ApplyLightFrameCalibrationInPlace(reader, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameFilter, frameIsBayered);
+            var baseline = manager.ApplyLightFrameCalibrationInPlace(reader, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameBinX, frameBinY, frameFilter, frameIsBayered);
 
-            var simd = manager2.ApplyLightFrameCalibrationInPlace(reader, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameFilter, frameIsBayered);
+            var simd = manager2.ApplyLightFrameCalibrationInPlace(reader, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameBinX, frameBinY, frameFilter, frameIsBayered);
 
             FloatAssert.AreEqual(baseline, simd);
         }

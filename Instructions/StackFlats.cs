@@ -138,7 +138,7 @@ namespace NINA.Plugin.Livestack.Instructions {
                                     stackFits.PopulateHeaderCards(metaData);
                                     stackFits.Close();
 
-                                    var calibrationMeta = new CalibrationFrameMeta(CalibrationFrameType.FLAT, output, 0, 0, 0, filter, fitsFiles[0].Width, fitsFiles[0].Height, (float)stack.Mean());
+                                    var calibrationMeta = new CalibrationFrameMeta(CalibrationFrameType.FLAT, output, 0, 0, metaData.Camera.BinX, metaData.Camera.BinY, 0, filter, fitsFiles[0].Width, fitsFiles[0].Height, (float)stack.Mean());
                                     LivestackMediator.CalibrationVM.AddSessionFlatMaster(calibrationMeta);
                                 }
                                 if (!LivestackMediator.Plugin.SaveCalibratedFlats) {
@@ -206,6 +206,8 @@ namespace NINA.Plugin.Livestack.Instructions {
                                                                    exposureTime: e.Image.RawImageData.MetaData.Image.ExposureTime,
                                                                    gain: e.Image.RawImageData.MetaData.Camera.Gain,
                                                                    offset: e.Image.RawImageData.MetaData.Camera.Offset,
+                                                                   binX: e.Image.RawImageData.MetaData.Camera.BinX,
+                                                                   binY: e.Image.RawImageData.MetaData.Camera.BinY,
                                                                    width: e.Image.RawImageData.Properties.Width,
                                                                    height: e.Image.RawImageData.Properties.Height,
                                                                    bitDepth: (int)profileService.ActiveProfile.CameraSettings.BitDepth,
@@ -257,7 +259,7 @@ namespace NINA.Plugin.Livestack.Instructions {
                         }
                         float[] theImageArray;
                         using (CFitsioFITSReader reader = new CFitsioFITSReader(item.Path)) {
-                            theImageArray = calibrationManager.ApplyFlatFrameCalibrationInPlace(reader, item.Width, item.Height, item.ExposureTime, item.Gain, item.Offset, item.Filter, item.IsBayered);
+                            theImageArray = calibrationManager.ApplyFlatFrameCalibrationInPlace(reader, item.Width, item.Height, item.ExposureTime, item.Gain, item.Offset, item.BinX, item.BinY, item.Filter, item.IsBayered);
                         }
 
                         Logger.Debug("Computing median after calibration");

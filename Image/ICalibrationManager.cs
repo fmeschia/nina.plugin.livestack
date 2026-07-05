@@ -4,9 +4,9 @@ namespace NINA.Plugin.Livestack.Image {
 
     public interface ICalibrationManager : IDisposable {
 
-        float[] ApplyFlatFrameCalibrationInPlace(CFitsioFITSReader image, int width, int height, double exposureTime, int gain, int offset, string inFilter, bool isBayered);
+        float[] ApplyFlatFrameCalibrationInPlace(CFitsioFITSReader image, int width, int height, double exposureTime, int gain, int offset, int binX, int binY, string inFilter, bool isBayered);
 
-        float[] ApplyLightFrameCalibrationInPlace(CFitsioFITSReader image, int width, int height, double exposureTime, int gain, int offset, string inFilter, bool isBayered);
+        float[] ApplyLightFrameCalibrationInPlace(CFitsioFITSReader image, int width, int height, double exposureTime, int gain, int offset, int binX, int binY, string inFilter, bool isBayered);
 
         void Dispose();
 
