@@ -227,6 +227,10 @@ namespace NINA.Plugin.Livestack {
             return CFitsioExtensions.fits_read_key_float(filePtr, keyname);
         }
 
+        public long ReadLongHeader(string keyname) {
+            return CFitsioExtensions.fits_read_key_lng(filePtr, keyname);
+        }
+
         public FITSHeader ReadHeader() {
             FITSHeader header = new FITSHeader(Width, Height);
             CfitsioNative.fits_get_hdrspace(filePtr, out var numKeywords, out var numMoreKeywords, out var status);

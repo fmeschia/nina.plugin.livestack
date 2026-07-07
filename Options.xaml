@@ -34,6 +34,7 @@
     <s:String x:Key="SaveCalibratedFlatsTooltip">Keeps the calibrated flat FITS files created by Stack flats. When off, they are deleted after the flat master is generated.</s:String>
     <s:String x:Key="SaveCalibratedLightsTooltip">Saves calibrated light FITS files in the working directory under calibrated\light.</s:String>
     <s:String x:Key="SaveStackedLightsTooltip">Automatically saves updated stack output in the working directory. Monochrome and channel stacks are saved as FITS files, and RGB combination stacks are saved as PNG files.</s:String>
+    <s:String x:Key="ResumeStacksBetweenSessionsTooltip">When enabled, starting Live Stack on a target/filter that already has a saved stack in the working directory continues accumulating onto it instead of starting over. Requires Autosave stacked Lights to have been on in the prior session.</s:String>
     <s:String x:Key="DefaultStretchTooltip">Initial stretch value used when new mono and RGB stack tabs are created.</s:String>
     <s:String x:Key="DefaultBlackClippingTooltip">Initial black-clipping value used when new mono and RGB stack tabs are created.</s:String>
     <s:String x:Key="DefaultEnableBackgroundExtractionTooltip">Experimental background extraction for new mono and RGB stack tabs. It only changes the displayed preview, not saved FITS stack data. Disable it if it suppresses real nebulosity, galaxy halos, or creates blotchy gradients.</s:String>
@@ -177,6 +178,22 @@
                             HorizontalAlignment="Left"
                             IsChecked="{Binding SaveStackedLights, Mode=TwoWay}"
                             ToolTip="{StaticResource SaveStackedLightsTooltip}" />
+                    </Grid>
+                    <Grid Margin="0,5,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Livestack_Label" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="Resume stacks between sessions?"
+                            ToolTip="{StaticResource ResumeStacksBetweenSessionsTooltip}" />
+                        <CheckBox
+                            Grid.Column="1"
+                            Margin="5,0,0,0"
+                            HorizontalAlignment="Left"
+                            IsChecked="{Binding ResumeStacksBetweenSessions, Mode=TwoWay}"
+                            ToolTip="{StaticResource ResumeStacksBetweenSessionsTooltip}" />
                     </Grid>
 
                     <Grid Margin="0,5,0,0">

@@ -3,6 +3,7 @@ using NINA.Image.FileFormat.FITS;
 using NINA.Image.ImageAnalysis;
 using NINA.Image.ImageData;
 using NINA.Image.Interfaces;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -74,12 +75,56 @@ namespace NINA.Plugin.Livestack.Image {
             ImageCount = 1;
         }
 
+        public void Resume(float[] stack, int imageCount, List<Accord.Point> referenceStars) {
+            Stack = stack;
+            ImageCount = imageCount;
+            ReferenceImageStars = referenceStars;
+        }
+
         private string GetStackFilePath() {
+            return GetStackFilePath(Target, Filter);
+        }
+
+        private static string GetStackFilePath(string target, string filter) {
             var destinationFolder = Path.Combine(LivestackMediator.Plugin.WorkingDirectory, "stacks");
             if (!Directory.Exists(destinationFolder)) { Directory.CreateDirectory(destinationFolder); }
 
-            var destinationFile = Path.Combine(destinationFolder, CoreUtil.ReplaceAllInvalidFilenameChars($"{Target}-{Filter}.fits"));
+            var destinationFile = Path.Combine(destinationFolder, CoreUtil.ReplaceAllInvalidFilenameChars($"{target}-{filter}.fits"));
             return destinationFile;
+        }
+
+        public static bool TryReadStackFromDisk(string target, string filter, int expectedWidth, int expectedHeight, out float[] stack, out int imageCount) {
+            stack = null;
+            imageCount = 0;
+
+            var path = GetStackFilePath(target, filter);
+            if (!File.Exists(path)) {
+                return false;
+            }
+
+            try {
+                using (var fits = new CFitsioFITSReader(path)) {
+                    if (fits.Width != expectedWidth || fits.Height != expectedHeight) {
+                        Logger.Warning($"Existing stack for target \"{target}\" filter \"{filter}\" has dimensions {fits.Width}x{fits.Height}, which does not match the incoming frame's {expectedWidth}x{expectedHeight}. Starting a new stack.");
+                        return false;
+                    }
+
+                    stack = fits.ReadAllPixelsAsFloat();
+                    imageCount = (int)fits.ReadLongHeader("IMGCOUNT");
+                }
+
+                if (imageCount <= 0) {
+                    stack = null;
+                    return false;
+                }
+
+                return true;
+            } catch (Exception ex) {
+                Logger.Warning($"Failed to load existing stack for target \"{target}\" filter \"{filter}\" from {path}: {ex.Message}");
+                stack = null;
+                imageCount = 0;
+                return false;
+            }
         }
 
         public void AutoSaveToDisk() {

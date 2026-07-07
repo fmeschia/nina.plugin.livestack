@@ -71,6 +71,7 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
             this.target = bag.Target;
             this.filter = bag.Filter;
             this.bag = bag;
+            stackCount = bag.ImageCount;
             stretchFactor = LivestackMediator.Plugin.DefaultStretchAmount;
             blackClipping = LivestackMediator.Plugin.DefaultBlackClipping;
             enableBackgroundExtraction = LivestackMediator.Plugin.DefaultEnableBackgroundExtraction;

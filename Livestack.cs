@@ -203,6 +203,16 @@ namespace NINA.Plugin.Livestack {
             }
         }
 
+        public bool ResumeStacksBetweenSessions {
+            get {
+                return PluginSettings.GetValueBoolean(nameof(ResumeStacksBetweenSessions), true);
+            }
+            set {
+                PluginSettings.SetValueBoolean(nameof(ResumeStacksBetweenSessions), value);
+                RaisePropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null) {

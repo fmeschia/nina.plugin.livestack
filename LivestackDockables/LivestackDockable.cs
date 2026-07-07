@@ -357,7 +357,7 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
             return true;
         }
 
-        private LiveStackTab GetOrCreateStackBag(LiveStackItem item) {
+        private async Task<LiveStackTab> GetOrCreateStackBag(LiveStackItem item, CancellationToken token) {
             var target = string.IsNullOrWhiteSpace(item.Target) ? LiveStackBag.NOTARGET : item.Target;
             var filter = string.IsNullOrWhiteSpace(item.Filter) ? LiveStackBag.NOFILTER : item.Filter;
             if (item.IsBayered) { filter = LiveStackBag.RED_OSC; }
@@ -365,12 +365,39 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
             var tab = Tabs.FirstOrDefault(x => x is LiveStackTab && x.Filter == filter && x.Target == target);
             if (tab == null) {
                 List<Accord.Point> stars = null;
-                var bag = new LiveStackBag(target, filter, new ImageProperties(item.Width, item.Height, (int)profileService.ActiveProfile.CameraSettings.BitDepth, item.IsBayered, item.Gain, item.Offset), item.MetaData, stars);
+                var properties = new ImageProperties(item.Width, item.Height, (int)profileService.ActiveProfile.CameraSettings.BitDepth, item.IsBayered, item.Gain, item.Offset);
+                var bag = new LiveStackBag(target, filter, properties, item.MetaData, stars);
+
+                if (LivestackMediator.Plugin.ResumeStacksBetweenSessions
+                    && LiveStackBag.TryReadStackFromDisk(target, filter, item.Width, item.Height, out var loadedStack, out var loadedCount)) {
+                    var candidateStars = await DetectStarsOnStack(loadedStack, item.Width, item.Height, properties.BitDepth, item.MetaData, token);
+                    if (HasEnoughAlignmentStars(candidateStars)) {
+                        bag.Resume(loadedStack, loadedCount, candidateStars);
+                        Logger.Info($"Resumed stack for target \"{target}\" filter \"{filter}\" with {loadedCount} prior frames.");
+                    } else {
+                        Logger.Warning($"Could not reconstruct enough alignment stars from the existing stack for target \"{target}\" filter \"{filter}\". Starting a new stack.");
+                    }
+                }
+
                 tab = new LiveStackTab(profileService, bag);
                 Tabs.Add(tab);
                 return tab as LiveStackTab;
             }
             return tab as LiveStackTab;
+        }
+
+        private async Task<List<Accord.Point>> DetectStarsOnStack(float[] stack, int width, int height, int bitDepth, ImageMetaData metaData, CancellationToken token) {
+            try {
+                var stackImageData = imageDataFactory.CreateBaseImageData(stack.ToUShortArray(), width, height, bitDepth, false, metaData);
+                var render = stackImageData.RenderImage();
+                render = await render.Stretch(profileService.ActiveProfile.ImageSettings.AutoStretchFactor, profileService.ActiveProfile.ImageSettings.BlackClipping, profileService.ActiveProfile.ImageSettings.UnlinkedStretch);
+                render = await render.DetectStars(false, profileService.ActiveProfile.ImageSettings.StarSensitivity, profileService.ActiveProfile.ImageSettings.NoiseReduction, token, default);
+                var starList = render.RawImageData.StarDetectionAnalysis?.StarList;
+                return LivestackMediator.GetImageTransformer().GetStars(starList, width, height);
+            } catch (Exception ex) {
+                Logger.Warning($"Failed to detect stars on a resumed stack image: {ex.Message}");
+                return new List<Accord.Point>();
+            }
         }
 
         private async Task StackMono(float[] theImageArray, LiveStackItem item, LiveStackTab tab, Guid correlation, CancellationToken token) {
@@ -487,11 +514,15 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
             StatusUpdate("Aligning frame - green channel", item);
             var greenTab = Tabs.FirstOrDefault(x => x is LiveStackTab && x.Filter == LiveStackBag.GREEN_OSC && x.Target == item.Target) as LiveStackTab;
             if (greenTab == null) {
-                var bag = new LiveStackBag(item.Target, LiveStackBag.GREEN_OSC, imageProperties, item.MetaData, stars);
-                bag.Add(debayeredImage.Data.Green.ToFloatArray());
+                var bag = new LiveStackBag(item.Target, LiveStackBag.GREEN_OSC, imageProperties, item.MetaData, referenceStars: null);
+                if (LivestackMediator.Plugin.ResumeStacksBetweenSessions
+                    && LiveStackBag.TryReadStackFromDisk(item.Target, LiveStackBag.GREEN_OSC, item.Width, item.Height, out var loadedGreenStack, out var loadedGreenCount)) {
+                    bag.Resume(loadedGreenStack, loadedGreenCount, referenceStars: null);
+                }
                 greenTab = new LiveStackTab(profileService, bag);
                 Tabs.Add(greenTab);
-            } else if (pushedReference) {
+            }
+            if (pushedReference) {
                 greenTab.ForcePushReference(imageProperties, stars, debayeredImage.Data.Green.ToFloatArray());
             } else {
                 greenTab.AddTransformedImage(debayeredImage.Data.Green, affineTransformationMatrix, flipped);
@@ -500,11 +531,15 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
             StatusUpdate("Aligning frame - blue channel", item);
             var blueTab = Tabs.FirstOrDefault(x => x is LiveStackTab && x.Filter == LiveStackBag.BLUE_OSC && x.Target == item.Target) as LiveStackTab;
             if (blueTab == null) {
-                var bag = new LiveStackBag(item.Target, LiveStackBag.BLUE_OSC, imageProperties, item.MetaData, stars);
-                bag.Add(debayeredImage.Data.Blue.ToFloatArray());
+                var bag = new LiveStackBag(item.Target, LiveStackBag.BLUE_OSC, imageProperties, item.MetaData, referenceStars: null);
+                if (LivestackMediator.Plugin.ResumeStacksBetweenSessions
+                    && LiveStackBag.TryReadStackFromDisk(item.Target, LiveStackBag.BLUE_OSC, item.Width, item.Height, out var loadedBlueStack, out var loadedBlueCount)) {
+                    bag.Resume(loadedBlueStack, loadedBlueCount, referenceStars: null);
+                }
                 blueTab = new LiveStackTab(profileService, bag);
                 Tabs.Add(blueTab);
-            } else if (pushedReference) {
+            }
+            if (pushedReference) {
                 blueTab.ForcePushReference(imageProperties, stars, debayeredImage.Data.Blue.ToFloatArray());
             } else {
                 blueTab.AddTransformedImage(debayeredImage.Data.Blue, affineTransformationMatrix, flipped);
@@ -532,7 +567,7 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
         }
 
         private async Task StackItem(LiveStackItem item, CancellationToken token) {
-            var tab = GetOrCreateStackBag(item);
+            var tab = await GetOrCreateStackBag(item, token);
             tab.Locked = true;
             try {
                 if (SelectedTab == null) {
