@@ -5,6 +5,7 @@
     <RootNamespace>NINA.Plugin.Livestack</RootNamespace>
     <AssemblyName>nina.plugin.livestack</AssemblyName>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+	  <Version>1.1.4.0</Version>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
