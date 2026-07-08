@@ -127,6 +127,17 @@ namespace NINA.Plugin.Livestack.Image {
             }
         }
 
+        public static void DeleteStackFile(string target, string filter) {
+            var path = GetStackFilePath(target, filter);
+            try {
+                if (File.Exists(path)) {
+                    File.Delete(path);
+                }
+            } catch (Exception ex) {
+                Logger.Warning($"Failed to delete stack file for target \"{target}\" filter \"{filter}\" at {path}: {ex.Message}");
+            }
+        }
+
         public void AutoSaveToDisk() {
             var destinationFile = GetStackFilePath();
             var tempFile = Path.Combine(destinationFile + ".tmp");

@@ -191,8 +191,12 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
                 Tabs.Remove(red);
                 Tabs.Remove(green);
                 Tabs.Remove(blue);
+                LiveStackBag.DeleteStackFile(tab.Target, LiveStackBag.RED_OSC);
+                LiveStackBag.DeleteStackFile(tab.Target, LiveStackBag.GREEN_OSC);
+                LiveStackBag.DeleteStackFile(tab.Target, LiveStackBag.BLUE_OSC);
             } else {
                 Tabs.Remove(tab);
+                LiveStackBag.DeleteStackFile(tab.Target, tab.Filter);
             }
             await Task.Run(() => LiveStackMemoryPressure.CompactAfterReleasingLargeBuffers("stack tab removed"));
         }
