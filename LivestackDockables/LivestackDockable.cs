@@ -389,6 +389,7 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
         private async Task<List<Accord.Point>> DetectStarsOnStack(float[] stack, int width, int height, int bitDepth, ImageMetaData metaData, CancellationToken token) {
             try {
                 var stackImageData = imageDataFactory.CreateBaseImageData(stack.ToUShortArray(), width, height, bitDepth, false, metaData);
+                var statistics = await stackImageData.Statistics;
                 var render = stackImageData.RenderImage();
                 render = await render.Stretch(profileService.ActiveProfile.ImageSettings.AutoStretchFactor, profileService.ActiveProfile.ImageSettings.BlackClipping, profileService.ActiveProfile.ImageSettings.UnlinkedStretch);
                 render = await render.DetectStars(false, profileService.ActiveProfile.ImageSettings.StarSensitivity, profileService.ActiveProfile.ImageSettings.NoiseReduction, token, default);
