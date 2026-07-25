@@ -374,7 +374,7 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
 
                 if (LivestackMediator.Plugin.ResumeStacksBetweenSessions
                     && LiveStackBag.TryReadStackFromDisk(target, filter, item.Width, item.Height, out var loadedStack, out var loadedCount)) {
-                    var candidateStars = await DetectStarsOnStack(loadedStack, item.Width, item.Height, properties.BitDepth, item.MetaData, token);
+                    var candidateStars = await DetectStarsOnStack(loadedStack, item.Width, item.Height, item.MetaData, token);
                     if (HasEnoughAlignmentStars(candidateStars)) {
                         bag.Resume(loadedStack, loadedCount, candidateStars);
                         Logger.Info($"Resumed stack for target \"{target}\" filter \"{filter}\" with {loadedCount} prior frames.");
@@ -390,9 +390,12 @@ namespace NINA.Plugin.Livestack.LivestackDockables {
             return tab as LiveStackTab;
         }
 
-        private async Task<List<Accord.Point>> DetectStarsOnStack(float[] stack, int width, int height, int bitDepth, ImageMetaData metaData, CancellationToken token) {
+        private async Task<List<Accord.Point>> DetectStarsOnStack(float[] stack, int width, int height, ImageMetaData metaData, CancellationToken token) {
             try {
-                var stackImageData = imageDataFactory.CreateBaseImageData(stack.ToUShortArray(), width, height, bitDepth, false, metaData);
+                // stack is a normalized [0,1] float array; ToUShortArray() always scales it to the full 16-bit
+                // range regardless of the camera's real ADC bit depth, so 16 is the correct declared bit depth here
+                // (matches the same pattern used for calibrated light frames elsewhere in this class).
+                var stackImageData = imageDataFactory.CreateBaseImageData(stack.ToUShortArray(), width, height, 16, false, metaData);
                 var statistics = await stackImageData.Statistics;
                 var render = stackImageData.RenderImage();
                 render = await render.Stretch(profileService.ActiveProfile.ImageSettings.AutoStretchFactor, profileService.ActiveProfile.ImageSettings.BlackClipping, profileService.ActiveProfile.ImageSettings.UnlinkedStretch);
