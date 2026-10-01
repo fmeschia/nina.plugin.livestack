@@ -1,5 +1,7 @@
 ﻿using System;
 
+using System.Threading;
+
 namespace NINA.Plugin.Livestack.Image {
 
     public interface ICalibrationManager : IDisposable {
@@ -8,9 +10,20 @@ namespace NINA.Plugin.Livestack.Image {
 
         float[] ApplyLightFrameCalibrationInPlace(CFitsioFITSReader image, int width, int height, double exposureTime, int gain, int offset, int binX, int binY, string inFilter, bool isBayered);
 
+        void ApplyLightFrameCalibrationInto(CFitsioFITSReader image, float[] destination, int width, int height, double exposureTime, int gain, int offset, int binX, int binY, string inFilter, bool isBayered, CancellationToken token = default) {
+            token.ThrowIfCancellationRequested();
+            ApplyLightFrameCalibrationInPlace(image, width, height, exposureTime, gain, offset, binX, binY, inFilter, isBayered).CopyTo(destination, 0);
+        }
+
+        void ApplyFlatFrameCalibrationInto(CFitsioFITSReader image, float[] destination, int width, int height, double exposureTime, int gain, int offset, int binX, int binY, string inFilter, bool isBayered, CancellationToken token = default) {
+            token.ThrowIfCancellationRequested();
+            ApplyFlatFrameCalibrationInPlace(image, width, height, exposureTime, gain, offset, binX, binY, inFilter, isBayered).CopyTo(destination, 0);
+        }
+
         void Dispose();
 
         void RegisterBiasMaster(CalibrationFrameMeta calibrationFrameMeta);
+        void ClearRegisteredMasters();
 
         void RegisterDarkMaster(CalibrationFrameMeta calibrationFrameMeta);
 

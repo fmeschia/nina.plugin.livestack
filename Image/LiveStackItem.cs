@@ -35,6 +35,7 @@ namespace NINA.Plugin.Livestack.Image {
             Target = CoreUtil.ReplaceAllInvalidFilenameChars(target);
             Width = width;
             Height = height;
+            BitDepth = bitDepth;
             IsBayered = isBayered;
             MetaData = metaData;
             HFR = analysis.HFR;
@@ -59,6 +60,7 @@ namespace NINA.Plugin.Livestack.Image {
         public int BinY { get; }
         public int Width { get; }
         public int Height { get; }
+        public int BitDepth { get; }
         public bool IsBayered { get; }
         public ImageMetaData MetaData { get; }
         public double HFR { get; }
