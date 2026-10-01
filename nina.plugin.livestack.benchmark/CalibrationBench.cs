@@ -132,19 +132,19 @@ public class CalibrationBench {
     [Benchmark]
     public float CachedMastersAndAllocatedFrame() {
         using CalibrationManagerSimd calibration = CreateFrameManager(true);
-        return calibration.ApplyLightFrameCalibrationInPlace(reader, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameFilter, frameIsBayered)[0];
+        return calibration.ApplyLightFrameCalibrationInPlace(reader, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameBinX, frameBinY, frameFilter, frameIsBayered)[0];
     }
 
     [Benchmark]
     public float StreamedMastersAndReusedFrame() {
         using CalibrationManagerSimd calibration = CreateFrameManager(false);
-        calibration.ApplyLightFrameCalibrationInto(reader, reusableOutput, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameFilter, frameIsBayered);
+        calibration.ApplyLightFrameCalibrationInto(reader, reusableOutput, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameBinX, frameBinY, frameFilter, frameIsBayered);
         return reusableOutput[0];
     }
 
     [Benchmark]
     public float PersistentStreamedMastersAndReusedFrame() {
-        manager2.ApplyLightFrameCalibrationInto(reader, reusableOutput, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameFilter, frameIsBayered);
+        manager2.ApplyLightFrameCalibrationInto(reader, reusableOutput, frameWidth, frameHeight, frameExposureTime, frameGain, frameOffset, frameBinX, frameBinY, frameFilter, frameIsBayered);
         return reusableOutput[0];
     }
 
